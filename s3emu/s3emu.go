@@ -51,7 +51,7 @@ func main() {
 	emu := s3in.New()
 	for _, conf := range conffile.Backend.Gdrive {
 		gaccess := gdrive.NewGDriveBackend(conf.Basedir)
-		accessQueue := accessqueue.NewAccessQueue(conffile.UploadWorker, conffile.UploadBacklog, gaccess, quitctx, &quitwaitgroup)
+		accessQueue := accessqueue.NewAccessQueue(conffile.UploadWorker, conffile.UploadBacklog, gaccess, quitctx, &quitwaitgroup, conf.Bucket)
 		emu.SetSource(conf.Bucket, accessQueue)
 	}
 	c := make(chan os.Signal, 1)
