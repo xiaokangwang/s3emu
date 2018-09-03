@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -17,19 +18,19 @@ import (
 )
 
 type GDriveConfigure struct {
-	Basedir string
-	Bucket  string
+	Basedir string `json:"Basedir"`
+	Bucket  string `json:"Bucket"`
 }
 
 type BackendConfigure struct {
-	Gdrive []GDriveConfigure
+	Gdrive []GDriveConfigure `json:"Gdrive"`
 }
 
 type BackupConfigure struct {
-	ListenAddress string
-	UploadWorker  int
-	UploadBacklog int
-	Backend       BackendConfigure
+	ListenAddress string           `json:"ListenAddress"`
+	UploadWorker  int              `json:"UploadWorker"`
+	UploadBacklog int              `json:"UploadBacklog"`
+	Backend       BackendConfigure `json:"Backend"`
 }
 
 func main() {
@@ -45,6 +46,7 @@ func main() {
 		panic(err)
 	}
 	interfacetools.CopyOut(result, &conffile)
+	fmt.Println(conffile)
 	var quitwaitgroup sync.WaitGroup
 	b := context.Background()
 	quitctx, cancel := context.WithCancel(b)

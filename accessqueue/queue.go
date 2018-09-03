@@ -50,12 +50,12 @@ func (aq *AccessQueue) UploadWorker() {
 	for {
 		select {
 		case Task := <-aq.uploadChan:
-			fmt.Printf("Uploading: %v->%v;", aq.id, Task.Filename)
+			fmt.Printf("Uploading: %v->%v;\n", aq.id, Task.Filename)
 			aq.directLGPD.Put(Task.Filename, Task.Content)
 			aq.uploadSynclocker.Done()
 			currentBacklog := atomic.AddInt64(&aq.backlogSum, -1)
 			totalsum := atomic.LoadInt64(&aq.totalSum)
-			fmt.Printf("Uploaded: %v->%v; Backlog %v, Total %v", aq.id, Task.Filename, currentBacklog, totalsum)
+			fmt.Printf("Uploaded: %v->%v; Backlog %v, Total %v\n", aq.id, Task.Filename, currentBacklog, totalsum)
 		case <-aq.working.Done():
 			aq.uploadCloseStatus.Lock()
 			aq.Finishup()
@@ -88,7 +88,7 @@ func (aq *AccessQueue) Put(key string, value []byte) error {
 	aq.uploadSynclocker.Add(1)
 	currentBacklog := atomic.AddInt64(&aq.totalSum, 1)
 	totalsum := atomic.AddInt64(&aq.backlogSum, 1)
-	fmt.Printf("Upload Queued: %v->%v; Backlog %v, Total %v", aq.id, key, currentBacklog, totalsum)
+	fmt.Printf("Upload Queued: %v->%v; Backlog %v, Total %v\n", aq.id, key, currentBacklog, totalsum)
 	aq.uploadChan <- task
 	aq.uploadCloseStatus.Unlock()
 	return nil
