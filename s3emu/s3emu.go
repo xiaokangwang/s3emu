@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"sync"
 
 	"github.com/ld9999999999/go-interfacetools"
@@ -45,13 +46,22 @@ func main() {
 	}
 	interfacetools.CopyOut(result, &conffile)
 	var quitwaitgroup sync.WaitGroup
-	quitctx := context.Background()
+	b := context.Background()
+	quitctx, cancel := context.WithCancel(b)
 	emu := s3in.New()
 	for _, conf := range conffile.Backend.Gdrive {
 		gaccess := gdrive.NewGDriveBackend(conf.Basedir)
 		accessQueue := accessqueue.NewAccessQueue(conffile.UploadWorker, conffile.UploadBacklog, gaccess, quitctx, &quitwaitgroup)
 		emu.SetSource(conf.Bucket, accessQueue)
 	}
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		<-c
+		cancel()
+		quitwaitgroup.Wait()
+		os.Exit(0)
+	}()
 	listenAndServe(conffile.ListenAddress, emu.Server())
 }
 
