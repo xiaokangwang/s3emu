@@ -2,6 +2,8 @@ package s3in
 
 //Code modified from github.com/johannesboyne/gofakes3
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -302,7 +304,8 @@ func (g *GoFakeS3) CreateObjectBrowserUpload(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("x-amz-id-2", "LriYPLdmOdAiIfgSm/F1YsViT1LW94/xUQxMsF7xiEb1a0wiIOIxl+zbwZ163pt7")
 	w.Header().Set("x-amz-request-id", "0A49CE4060975EAC")
-	w.Header().Set("ETag", "\"fbacf535f27731c9771645a39863328\"")
+	hash := md5.Sum(body)
+	w.Header().Set("ETag", "\""+hex.EncodeToString(hash[:])+"\"")
 	w.Header().Set("Server", "AmazonS3")
 	w.Write([]byte{})
 
@@ -346,7 +349,8 @@ func (g *GoFakeS3) CreateObject(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("x-amz-id-2", "LriYPLdmOdAiIfgSm/F1YsViT1LW94/xUQxMsF7xiEb1a0wiIOIxl+zbwZ163pt7")
 	w.Header().Set("x-amz-request-id", "0A49CE4060975EAC")
-	w.Header().Set("ETag", "\"fbacf535f27731c9771645a39863328\"")
+	hash := md5.Sum(body)
+	w.Header().Set("ETag", "\""+hex.EncodeToString(hash[:])+"\"")
 	w.Header().Set("Server", "AmazonS3")
 	w.Write([]byte{})
 }
