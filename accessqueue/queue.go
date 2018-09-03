@@ -30,8 +30,13 @@ func NewAccessQueue(uploadworkersum, maxbacklog int, directLGPD lgpd.LGPD, worki
 	ret.working = working
 	ret.directLGPD = directLGPD
 	ret.uploadWorker = uploadWorker
-
 	ret.uploadChan = make(chan NetworkUploadTask, ret.maxbacklog)
+
+	for uploadworkersum >= 0 {
+		uploadWorker.Add(1)
+		go ret.UploadWorker()
+		uploadworkersum--
+	}
 	return ret
 }
 
@@ -70,11 +75,13 @@ func (aq *AccessQueue) Put(key string, value []byte) error {
 	}
 
 	task := NetworkUploadTask{Filename: key, Content: value}
+	aq.uploadSynclocker.Add(1)
 	aq.uploadChan <- task
 	aq.uploadCloseStatus.Unlock()
 	return nil
 }
 func (aq *AccessQueue) Get(key string) ([]byte, lgpd.File, error) {
+	aq.uploadSynclocker.Wait()
 	return aq.directLGPD.Get(key)
 }
 func (aq *AccessQueue) List(perfix string) []lgpd.File {
