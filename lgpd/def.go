@@ -1,7 +1,7 @@
 package lgpd
 
 type LGPD interface {
-	Get(key string) ([]byte, File, error)
+	Get(key string, nofetch bool) ([]byte, File, error)
 	Put(key string, value []byte) error
 	List(perfix string) []File
 }

@@ -93,9 +93,9 @@ func (aq *AccessQueue) Put(key string, value []byte) error {
 	aq.uploadCloseStatus.Unlock()
 	return nil
 }
-func (aq *AccessQueue) Get(key string) ([]byte, lgpd.File, error) {
+func (aq *AccessQueue) Get(key string, nofetch bool) ([]byte, lgpd.File, error) {
 	aq.uploadSynclocker.Wait()
-	return aq.directLGPD.Get(key)
+	return aq.directLGPD.Get(key, nofetch)
 }
 func (aq *AccessQueue) List(perfix string) []lgpd.File {
 	return aq.directLGPD.List(perfix)

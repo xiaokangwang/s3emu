@@ -232,7 +232,7 @@ func (g *GoFakeS3) GetObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, meta, err := access.Get(vars["ObjectName"])
+	data, meta, err := access.Get(vars["ObjectName"], false)
 
 	if err != nil {
 		log.Println("can't get")
@@ -372,7 +372,7 @@ func (g *GoFakeS3) HeadObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, meta, err := access.Get(vars["ObjectName"])
+	data, meta, err := access.Get(vars["ObjectName"], true)
 
 	if err != nil {
 		log.Println("can't get")

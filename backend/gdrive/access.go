@@ -112,7 +112,7 @@ EnqueueUploadTask_retry:
 	}
 	return nil
 }
-func (ntq *GDriveBackend) Get(key string) ([]byte, lgpd.File, error) {
+func (ntq *GDriveBackend) Get(key string, nofetch bool) ([]byte, lgpd.File, error) {
 	ntq.ensureToken()
 	var ret lgpd.File
 	ret.Name = key
@@ -131,6 +131,10 @@ func (ntq *GDriveBackend) Get(key string) ([]byte, lgpd.File, error) {
 
 	ret.Length = int(r.Files[0].Size)
 	ret.Mark = r.Files[0].Md5Checksum
+
+	if nofetch {
+		return nil, ret, nil
+	}
 
 	abuseFlag := false
 EnqueueDownloadTask_download:
