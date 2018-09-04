@@ -22,6 +22,7 @@ type AccessQueue struct {
 	id                string
 	backlogSum        int64
 	totalSum          int64
+	oppulist          []lgpd.File
 }
 
 type NetworkUploadTask struct {
@@ -92,6 +93,7 @@ func (aq *AccessQueue) Put(key string, value []byte) error {
 	totalsum := atomic.AddInt64(&aq.backlogSum, 1)
 	fmt.Printf("Upload Queued: %v->%v; Backlog %v, Total %v\n", aq.id, key, currentBacklog, totalsum)
 	aq.uploadChan <- task
+	aq.oppulist = append(aq.oppulist, lgpd.File{Name: key, Length: len(value)})
 	aq.uploadCloseStatus.Unlock()
 	return nil
 }
@@ -105,5 +107,15 @@ func (aq *AccessQueue) GetS(key string, nofetch bool) (io.ReadCloser, lgpd.File,
 }
 func (aq *AccessQueue) List(perfix string) []lgpd.File {
 	aq.uploadSynclocker.Wait()
-	return aq.directLGPD.List(perfix)
+	result := append(aq.directLGPD.List(perfix), aq.oppulist...)
+	var resultx []lgpd.File
+	var dedup map[string]bool
+	for _, ctx := range result {
+		_, dup := dedup[ctx.Name]
+		dedup[ctx.Name] = true
+		if !dup {
+			resultx = append(resultx, ctx)
+		}
+	}
+	return resultx
 }
