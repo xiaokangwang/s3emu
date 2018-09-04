@@ -107,7 +107,6 @@ func (aq *AccessQueue) GetS(key string, nofetch bool) (io.ReadCloser, lgpd.File,
 	return aq.directLGPD.GetS(key, nofetch)
 }
 func (aq *AccessQueue) List(perfix string) []lgpd.File {
-	aq.uploadSynclocker.Wait()
 	if (len(aq.listcache)) == 0 {
 		aq.listcache = aq.directLGPD.List(perfix)
 	}
