@@ -23,6 +23,7 @@ type AccessQueue struct {
 	backlogSum        int64
 	totalSum          int64
 	oppulist          []lgpd.File
+	listcache         []lgpd.File
 }
 
 type NetworkUploadTask struct {
@@ -107,7 +108,10 @@ func (aq *AccessQueue) GetS(key string, nofetch bool) (io.ReadCloser, lgpd.File,
 }
 func (aq *AccessQueue) List(perfix string) []lgpd.File {
 	aq.uploadSynclocker.Wait()
-	result := append(aq.directLGPD.List(perfix), aq.oppulist...)
+	if (len(aq.listcache)) == 0 {
+		aq.listcache = aq.directLGPD.List(perfix)
+	}
+	result := append(aq.listcache, aq.oppulist...)
 	var resultx []lgpd.File
 	dedup := make(map[string]bool)
 	for _, ctx := range result {
