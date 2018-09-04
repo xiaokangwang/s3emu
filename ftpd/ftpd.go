@@ -128,7 +128,12 @@ func (td Ftpd) GetFile(s string, s2 int64) (int64, io.ReadCloser, error) {
 	return int64(file.Length), body, nil
 
 }
-func (td Ftpd) PutFile(s string, r io.Reader, o bool) (int64, error) {
+func (td Ftpd) PutFile(s string, r io.Reader, o bool) (i int64, ret error) {
+	defer func() {
+		recover()
+		ret = errors.New("Unexpected Error")
+		i = 0
+	}()
 	if o {
 		return 0, errors.New("Not Supported")
 	}
