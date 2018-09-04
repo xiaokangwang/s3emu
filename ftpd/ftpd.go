@@ -49,7 +49,7 @@ func (fi Fileinfo) Group() string { return "root" }
 func (td Ftpd) Init(*server.Conn) {}
 func (td Ftpd) Stat(s string) (server.FileInfo, error) {
 	bucket := td.bucket(s)
-	filename := td.bucket(s)
+	filename := td.filename(s)
 	fmt.Printf("stat %v %v\n", bucket, filename)
 	if bucket == "" {
 		return &Fileinfo{isDir: true, name: "/"}, nil
@@ -107,7 +107,7 @@ func (td Ftpd) GetFile(s string, s2 int64) (int64, io.ReadCloser, error) {
 		return 0, nil, errors.New("Not Supported")
 	}
 	bucket := td.bucket(s)
-	filename := td.bucket(s)
+	filename := td.filename(s)
 	fmt.Printf("get %v %v\n", bucket, filename)
 	access, ok := td.access[bucket]
 	if !ok {
@@ -126,7 +126,7 @@ func (td Ftpd) PutFile(s string, r io.Reader, o bool) (int64, error) {
 		return 0, errors.New("Not Supported")
 	}
 	bucket := td.bucket(s)
-	filename := td.bucket(s)
+	filename := td.filename(s)
 	fmt.Printf("put %v %v\n", bucket, filename)
 	access, ok := td.access[bucket]
 	if !ok {
