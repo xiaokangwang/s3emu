@@ -3,6 +3,7 @@ package accessqueue
 import (
 	"context"
 	"fmt"
+	"io"
 	"sync"
 	"sync/atomic"
 
@@ -29,6 +30,7 @@ type NetworkUploadTask struct {
 }
 
 func NewAccessQueue(uploadworkersum, maxbacklog int, directLGPD lgpd.LGPD, working context.Context, uploadWorker *sync.WaitGroup, id string) *AccessQueue {
+	fmt.Printf("AQ Created")
 	ret := &AccessQueue{}
 	ret.uploadworkersum = uploadworkersum
 	ret.maxbacklog = maxbacklog
@@ -96,6 +98,10 @@ func (aq *AccessQueue) Put(key string, value []byte) error {
 func (aq *AccessQueue) Get(key string, nofetch bool) ([]byte, lgpd.File, error) {
 	aq.uploadSynclocker.Wait()
 	return aq.directLGPD.Get(key, nofetch)
+}
+func (aq *AccessQueue) GetS(key string, nofetch bool) (io.ReadCloser, lgpd.File, error) {
+	aq.uploadSynclocker.Wait()
+	return aq.directLGPD.GetS(key, nofetch)
 }
 func (aq *AccessQueue) List(perfix string) []lgpd.File {
 	return aq.directLGPD.List(perfix)

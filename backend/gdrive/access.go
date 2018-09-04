@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -154,6 +155,44 @@ EnqueueDownloadTask_download:
 	resp.Body.Close()
 
 	return c, ret, nil
+}
+
+func (ntq *GDriveBackend) GetS(key string, nofetch bool) (io.ReadCloser, lgpd.File, error) {
+	ntq.ensureToken()
+	var ret lgpd.File
+	ret.Name = key
+	fn := key
+	r, err := ntq.srv.Files.List().Q("name = '" + fn + "' and '" + ntq.uploadprefix + "' in parents ").PageSize(10).
+		Fields("nextPageToken, files(*)").Do()
+	if err != nil {
+		log.Fatalf("Unable to retrieve files: %v", err)
+	}
+
+	if len(r.Files) == 0 {
+		return nil, ret, errors.New("File not found")
+	}
+
+	did := r.Files[0].Id
+
+	ret.Length = int(r.Files[0].Size)
+	ret.Mark = r.Files[0].Md5Checksum
+
+	if nofetch {
+		return nil, ret, nil
+	}
+
+	abuseFlag := false
+EnqueueDownloadTask_download:
+	fd := ntq.srv.Files.Get(did)
+	resp, err := fd.AcknowledgeAbuse(abuseFlag).Download()
+	if err != nil {
+		if !abuseFlag {
+			abuseFlag = true
+			goto EnqueueDownloadTask_download
+		}
+		goto EnqueueDownloadTask_download
+	}
+	return resp.Body, ret, nil
 }
 
 func (ntq *GDriveBackend) List(perfix string) []lgpd.File {

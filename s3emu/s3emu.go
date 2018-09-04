@@ -8,13 +8,15 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 
+	fserver "github.com/goftp/server"
 	"github.com/ld9999999999/go-interfacetools"
 	"github.com/nahanni/go-ucl"
 	"github.com/xiaokangwang/s3emu/accessqueue"
 	"github.com/xiaokangwang/s3emu/backend/gdrive"
-	"github.com/xiaokangwang/s3emu/s3in"
+	"github.com/xiaokangwang/s3emu/ftpd"
 )
 
 type GDriveConfigure struct {
@@ -50,7 +52,7 @@ func main() {
 	var quitwaitgroup sync.WaitGroup
 	b := context.Background()
 	quitctx, cancel := context.WithCancel(b)
-	emu := s3in.New()
+	emu := ftpd.Ftpd{}
 	for _, conf := range conffile.Backend.Gdrive {
 		gaccess := gdrive.NewGDriveBackend(conf.Basedir)
 		accessQueue := accessqueue.NewAccessQueue(conffile.UploadWorker, conffile.UploadBacklog, gaccess, quitctx, &quitwaitgroup, conf.Bucket)
@@ -64,7 +66,7 @@ func main() {
 		quitwaitgroup.Wait()
 		os.Exit(0)
 	}()
-	listenAndServe(conffile.ListenAddress, emu.Server())
+	listenAndServeFTP(conffile.ListenAddress, emu)
 }
 
 func listenAndServe(addr string, handler http.Handler) {
@@ -77,4 +79,25 @@ func listenAndServe(addr string, handler http.Handler) {
 	log.Println("using port:", listener.Addr().(*net.TCPAddr).Port)
 	server := &http.Server{Addr: addr, Handler: handler}
 	server.Serve(listener)
+}
+
+type Single struct {
+	r fserver.Driver
+}
+
+func (s *Single) NewDriver() (fserver.Driver, error) {
+	return s.r, nil
+}
+
+func (s *Single) CheckPasswd(string, string) (bool, error) {
+	return true, nil
+}
+
+func listenAndServeFTP(addr string, handler ftpd.Ftpd) {
+
+	i, _ := strconv.Atoi(addr)
+	fac := &Single{r: handler}
+	server := &fserver.ServerOpts{Hostname: "127.0.0.1", Port: i, Factory: fac, Auth: fac}
+	sins := fserver.NewServer(server)
+	sins.ListenAndServe()
 }
