@@ -32,7 +32,11 @@ func (fi Fileinfo) Size() int64 {
 	return fi.size
 }
 func (fi Fileinfo) Mode() os.FileMode {
-	return fi.mode
+	amask := os.FileMode(0)
+	if fi.isDir {
+		amask |= os.ModeDir
+	}
+	return fi.mode | amask
 }
 func (fi Fileinfo) ModTime() time.Time {
 	return fi.modtime
@@ -57,6 +61,9 @@ func (td Ftpd) Stat(s string) (server.FileInfo, error) {
 	access, ok := td.access[bucket]
 	if !ok {
 		return nil, errors.New("bucket not found")
+	}
+	if filename == "" {
+		return &Fileinfo{isDir: true, name: bucket}, nil
 	}
 	_, file, err := access.Get(filename, true)
 
@@ -143,9 +150,15 @@ func (td Ftpd) PutFile(s string, r io.Reader, o bool) (int64, error) {
 	return int64(len(by)), nil
 }
 func (td *Ftpd) bucket(s string) string {
+	defer func() {
+		recover()
+	}()
 	return strings.Split(s, "/")[1]
 }
 func (td *Ftpd) filename(s string) string {
+	defer func() {
+		recover()
+	}()
 	return strings.Split(s, "/")[2]
 }
 
