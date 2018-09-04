@@ -90,8 +90,8 @@ func (aq *AccessQueue) Put(key string, value []byte) error {
 
 	task := NetworkUploadTask{Filename: key, Content: value}
 	aq.uploadSynclocker.Add(1)
-	currentBacklog := atomic.AddInt64(&aq.totalSum, 1)
-	totalsum := atomic.AddInt64(&aq.backlogSum, 1)
+	totalsum := atomic.AddInt64(&aq.totalSum, 1)
+	currentBacklog := atomic.AddInt64(&aq.backlogSum, 1)
 	fmt.Printf("Upload Queued: %v->%v; Backlog %v, Total %v\n", aq.id, key, currentBacklog, totalsum)
 	aq.uploadChan <- task
 	aq.oppulist = append(aq.oppulist, lgpd.File{Name: key, Length: len(value)})
