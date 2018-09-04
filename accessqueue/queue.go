@@ -109,7 +109,7 @@ func (aq *AccessQueue) List(perfix string) []lgpd.File {
 	aq.uploadSynclocker.Wait()
 	result := append(aq.directLGPD.List(perfix), aq.oppulist...)
 	var resultx []lgpd.File
-	var dedup map[string]bool
+	dedup := make(map[string]bool)
 	for _, ctx := range result {
 		_, dup := dedup[ctx.Name]
 		dedup[ctx.Name] = true
